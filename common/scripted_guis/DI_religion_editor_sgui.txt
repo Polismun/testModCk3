@@ -1,0 +1,99 @@
+### Re-Select Religion ###
+DI_reload_selected_religion = {
+    scope = character    # Personnage joueur
+
+    effect = {
+        save_scope_as = player
+        # On récupère la religion du personnage et on la sauvegarde dans "selected_religion"
+        scope:player.var:DI_innovation_selected_char.Religion = { save_scope_as = selected_religion }
+        
+        set_variable = {
+            name = DI_innovation_selected_religion
+            value = scope:selected_religion
+        }
+    }
+}
+### New Religion Change SGUI ###
+DI_ce_religion_change = {
+    scope = character    # Personnage joueur
+
+    saved_scopes = {
+        selected_religion    # La religion sélectionnée dans la fenêtre d’édition de religion
+    }
+
+    effect = {
+        save_scope_as = player_character
+        # On sauvegarde la religion sélectionnée dans une variable copy_religion
+        scope:player_character.var:DI_innovation_selected_religion_copy = { save_scope_as = copy_religion }
+
+        var:DI_innovation_selected_char = {
+            set_religion = scope:copy_religion
+        }
+
+        set_variable = {
+            name = DI_innovation_selected_religion
+            value = scope:copy_religion
+        }
+    }
+}
+### Convert all pinned characters to selected religion ###
+DI_ce_convert_all_pinned_religion = {
+    scope = character    # Personnage joueur
+
+    effect = {
+        save_scope_as = player_character
+        scope:player_character.var:DI_innovation_selected_religion_copy = { save_scope_as = copy_religion }
+        
+        every_in_list = {
+            variable = pinned_characters
+
+            limit = {
+                NOR = {
+                    this = scope:player_character.var:DI_innovation_selected_char_copy
+                    this.religion = scope:copy_religion
+                }
+            }
+
+            set_religion = scope:copy_religion
+        }
+    }
+}
+### Convert all pinned characters to player's religion ###
+DI_ce_convert_to_player_religion = {
+    scope = character    # Personnage joueur
+
+    effect = {
+        save_scope_as = player_character
+
+        every_in_list = {
+            variable = pinned_characters
+
+            limit = {
+                NOR = {
+                    this = scope:player_character
+                }
+            }
+
+            set_religion = scope:player_character.Religion
+        }
+    }
+}
+### Convert every vassal to selected religion ###
+DI_convert_every_vassal_religion = {
+    scope = character    # Personnage joueur
+
+    effect = {
+        save_scope_as = player_character
+        scope:player_character.var:DI_innovation_selected_religion_copy = { save_scope_as = copy_religion }
+        scope:player_character.var:DI_innovation_selected_char = { save_scope_as = selected_char }
+
+        scope:selected_char = {
+            every_vassal = {
+                limit = {
+                    NOT = { this.religion = scope:copy_religion }
+                }
+                set_religion = scope:copy_religion
+            }
+        }
+    }
+}
