@@ -1,0 +1,258 @@
+window = {
+    name = "DI_religion_editor_window"
+    layer = windows_layer
+
+    using = Window_Size_Sidebar
+    using = Window_Background_Sidebar
+    movable = no
+
+    ########################################################
+    # 1) DataContext
+    # Ici, on récupère la religion du personnage joué.
+    ########################################################
+    datacontext = "[GetVariableSystem]"
+    datacontext = "[GetPlayer]"
+    datacontext = "[GetPlayer.GetReligion]"
+
+    ########################################################
+    # 2) Condition de visibilité
+    # La fenêtre s’affiche si la variable "DI_religion_editor_window_visible" existe.
+    ########################################################
+    visible = "[GetVariableSystem.Exists('DI_religion_editor_window_visible')]"
+
+    ########################################################
+    # 3) Animation (optionnel)
+    ########################################################
+    using = DI_Innovation_Anim
+
+    vbox = {
+        ###########################################
+        # Header (titre, bouton de fermeture)
+        ###########################################
+        using = DI_Religion_Editor_Header
+
+        ###########################################
+        # Les onglets de l’éditeur (Overview, Tenets, Doctrines)
+        ###########################################
+        hbox = {
+            name = "religion_editor_tabs"
+            layoutpolicy_horizontal = expanding
+            margin_top = 10
+
+            # Onglet : Overview (aperçu)
+            button_tab = {
+                layoutpolicy_horizontal = expanding
+                onclick = "[GetVariableSystem.Set('religion_editor_active_tab', 'overview')]"
+                down = "[GetVariableSystem.HasValue('religion_editor_active_tab', 'overview')]"
+                text_single = {
+                    parentanchor = center
+                    text = "RELIGION_EDITOR_OVERVIEW"  # clé de loc
+                    default_format = "#low"
+                }
+            }
+
+            # Onglet : Tenets
+            button_tab = {
+                layoutpolicy_horizontal = expanding
+                onclick = "[GetVariableSystem.Set('religion_editor_active_tab', 'tenets')]"
+                down = "[GetVariableSystem.HasValue('religion_editor_active_tab', 'tenets')]"
+                text_single = {
+                    parentanchor = center
+                    text = "RELIGION_EDITOR_TENETS"
+                    default_format = "#low"
+                }
+            }
+
+            # Onglet : Doctrines
+            button_tab = {
+                layoutpolicy_horizontal = expanding
+                onclick = "[GetVariableSystem.Set('religion_editor_active_tab', 'doctrines')]"
+                down = "[GetVariableSystem.HasValue('religion_editor_active_tab', 'doctrines')]"
+                text_single = {
+                    parentanchor = center
+                    text = "RELIGION_EDITOR_DOCTRINES"
+                    default_format = "#low"
+                }
+            }
+        }
+
+        ###########################################
+        # Contenu de l'onglet OVERVIEW
+        ###########################################
+        vbox = {
+            name = "overview_tab"
+            visible = "[GetVariableSystem.HasValue('religion_editor_active_tab', 'overview')]"
+            layoutpolicy_horizontal = expanding
+            layoutpolicy_vertical = expanding
+            spacing = 10
+            margin = { 10 10 }
+
+            text_label_center = {
+                # Affiche le nom de la religion (ou de la foi)
+                text = "[Religion.GetName]"  # ou [Faith.GetFaithName] selon ta terminologie
+                using = Font_Size_Medium
+            }
+
+            widget = {
+                # Icône de la religion
+                size = { 128 128 }
+                icon = {
+                    texture = "[Religion.GetIcon]"
+                    size = { 128 128 }
+                }
+            }
+
+            text_multi = {
+                # Description ou flavour text
+                text = "[Religion.GetDescription]"
+                autoresize = yes
+                max_width = 450
+            }
+
+            hbox = {
+                spacing = 15
+                margin_top = 10
+
+                # Bouton pour renommer la religion
+                button_standard = {
+                    text = "Rename Religion"
+                    tooltip = "Rename the religion of the player"
+                    using = tooltip_nw
+                    onclick = "[GetScriptedGui('DI_rename_religion_script').Execute( GuiScope.SetRoot(GetPlayer.MakeScope).AddScope('target_religion', Religion.MakeScope).End )]"
+                }
+
+                # Bouton pour modifier la fervor (ou autre propriété)
+                button_standard = {
+                    text = "Set Fervor"
+                    tooltip = "Modify the fervor level of this religion"
+                    using = tooltip_nw
+                    onclick = "[GetScriptedGui('DI_set_fervor_script').Execute( GuiScope.SetRoot(GetPlayer.MakeScope).AddScope('target_religion', Religion.MakeScope).End )]"
+                }
+            }
+            expand = {}
+        }
+
+        ###########################################
+        # Contenu de l'onglet TENETS
+        ###########################################
+        vbox = {
+            name = "tenets_tab"
+            visible = "[GetVariableSystem.HasValue('religion_editor_active_tab', 'tenets')]"
+            layoutpolicy_horizontal = expanding
+            layoutpolicy_vertical = expanding
+            spacing = 10
+            margin = { 10 10 }
+
+            text_label_center = {
+                text = "RELIGION_EDITOR_TENETS_TITLE"  # clé de localisation
+                using = Font_Size_Medium
+            }
+
+            # Liste déroulante des Tenets
+            scrollbox = {
+                layoutpolicy_horizontal = expanding
+                layoutpolicy_vertical = expanding
+                scrollbarpolicy_horizontal = always_off
+                size = { 0 400 }
+
+                blockoverride "scrollbox_content" {
+                    vbox = {
+                        # On suppose ici que Religion possède une méthode GetTenets
+                        datamodel = "[Religion.GetTenets]"
+                        item = {
+                            hbox = {
+                                datacontext = "[GuiReligionTenet.GetTenet]"
+                                margin_bottom = 5
+                                spacing = 10
+
+                                icon = {
+                                    texture = "[ReligionTenet.GetIcon]"
+                                    size = { 48 48 }
+                                }
+
+                                vbox = {
+                                    text_single = {
+                                        text = "[ReligionTenet.GetName]"
+                                        using = Font_Size_Medium
+                                    }
+                                    text_multi = {
+                                        text = "[ReligionTenet.GetDescription]"
+                                        max_width = 380
+                                    }
+                                }
+                                expand = {}
+
+                                button_standard = {
+                                    text = "Replace"
+                                    tooltip = "Replace this tenet"
+                                    onclick = "[Religion.OpenReplaceTenetWindow( ReligionTenet.Self )]"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            expand = {}
+        }
+
+        ###########################################
+        # Contenu de l'onglet DOCTRINES
+        ###########################################
+        vbox = {
+            name = "doctrines_tab"
+            visible = "[GetVariableSystem.HasValue('religion_editor_active_tab', 'doctrines')]"
+            layoutpolicy_horizontal = expanding
+            layoutpolicy_vertical = expanding
+            spacing = 10
+            margin = { 10 10 }
+
+            text_label_center = {
+                text = "RELIGION_EDITOR_DOCTRINES_TITLE"
+                using = Font_Size_Medium
+            }
+
+            # Liste déroulante des doctrines
+            scrollbox = {
+                layoutpolicy_horizontal = expanding
+                layoutpolicy_vertical = expanding
+                size = { 0 400 }
+                blockoverride "scrollbox_content" {
+                    vbox = {
+                        datamodel = "[Religion.GetDoctrines]"
+                        item = {
+                            hbox = {
+                                datacontext = "[GuiReligionDoctrine.GetDoctrine]"
+                                margin_bottom = 5
+                                spacing = 10
+
+                                icon = {
+                                    texture = "[ReligionDoctrine.GetIcon]"
+                                    size = { 48 48 }
+                                }
+
+                                vbox = {
+                                    text_single = {
+                                        text = "[ReligionDoctrine.GetName]"
+                                        using = Font_Size_Medium
+                                    }
+                                    text_multi = {
+                                        text = "[ReligionDoctrine.GetDescription]"
+                                        max_width = 380
+                                    }
+                                }
+                                expand = {}
+
+                                button_standard = {
+                                    text = "Change"
+                                    tooltip = "Change this doctrine"
+                                    onclick = "[Religion.OpenDoctrineChangeWindow( ReligionDoctrine.Self )]"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            expand = {}
+        }
+    }
+}
